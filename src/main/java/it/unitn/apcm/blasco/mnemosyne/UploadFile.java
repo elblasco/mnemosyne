@@ -1,23 +1,13 @@
 package it.unitn.apcm.blasco.mnemosyne;
 
-import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
-import java.io.IOException;
-import java.security.NoSuchAlgorithmException;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.SQLException;
-
-import static it.unitn.apcm.blasco.mnemosyne.Utils.User.getUserFromDB;
-import static it.unitn.apcm.blasco.mnemosyne.Utils.hashPassword;
 
 @WebServlet(name = "UploadFile", value = "/UploadFile")
 public class UploadFile extends HttpServlet {
-    private static final String DB_URL = "jdbc:sqlite:/data/mnemosyne.db";
 
     public void init() {
         try {
@@ -31,33 +21,5 @@ public class UploadFile extends HttpServlet {
         response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
     }
 
-    public void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-        String usr = req.getParameter("logInUsr");
-        String psw = req.getParameter("logInPsw");
-
-        if (usr == null || usr.isEmpty() || psw == null || psw.isEmpty()) {
-            System.out.println("Username or password is empty");
-            resp.sendRedirect(req.getHeader("Referer"));
-            return;
-        }
-
-        try (Connection conn = DriverManager.getConnection(DB_URL)) {
-            Utils.User user = getUserFromDB(conn, usr);
-            String hashedPsw = hashPassword(psw, user.Salt());
-            if (user.hashedPassword().equals(hashedPsw)) {
-                var out = resp.getWriter();
-                out.println("<html><body><h1>Logged</h1></body></html>");
-            }
-            else {
-                System.out.println("Logged in");
-                req.setAttribute("username", usr);
-                req.getRequestDispatcher("home.jsp").forward(req, resp);
-            }
-        }
-        catch (SQLException | NoSuchAlgorithmException e) {
-            throw new IOException("Registration failed", e);
-        } catch (ServletException e) {
-            throw new RuntimeException(e);
-        }
-    }
+    public void doPost(HttpServletRequest req, HttpServletResponse resp) {}
 }
