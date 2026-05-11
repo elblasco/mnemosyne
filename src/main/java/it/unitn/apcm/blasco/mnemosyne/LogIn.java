@@ -2,19 +2,19 @@ package it.unitn.apcm.blasco.mnemosyne;
 
 import java.io.*;
 import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
 import java.sql.*;
 
-import jakarta.servlet.ServletException;
+import it.unitn.apcm.blasco.mnemosyne.utils.User;
 import jakarta.servlet.http.*;
 import jakarta.servlet.annotation.*;
 
-import static it.unitn.apcm.blasco.mnemosyne.Utils.DB_URL;
-import static it.unitn.apcm.blasco.mnemosyne.Utils.User.getUserFromDB;
-import static it.unitn.apcm.blasco.mnemosyne.Utils.hashPassword;
+import static it.unitn.apcm.blasco.mnemosyne.utils.User.getUserFromDB;
+import static it.unitn.apcm.blasco.mnemosyne.utils.Utils.DB_URL;
+import static it.unitn.apcm.blasco.mnemosyne.utils.Utils.hashPassword;
 
 @WebServlet(name = "LogIn", value = "/LogIn")
 public class LogIn extends HttpServlet {
-    //private static final String DB_URL = "jdbc:sqlite:/data/mnemosyne.db";
 
     public void init() {
         try {
@@ -33,28 +33,28 @@ public class LogIn extends HttpServlet {
         String psw = req.getParameter("logInPsw");
 
         if (usr == null || usr.isEmpty() || psw == null || psw.isEmpty()) {
-            System.out.println("Username or password is empty");
-            resp.sendRedirect(req.getHeader("Referer"));
+            resp.sendRedirect(req.getContextPath() + "/?error=Empty+credentials");
             return;
         }
 
         try (Connection conn = DriverManager.getConnection(DB_URL)) {
-            Utils.User user = getUserFromDB(conn, usr);
-            String hashedPsw = hashPassword(psw, user.Salt());
+            User user = getUserFromDB(conn, usr);
+            String hashedPsw = hashPassword(psw, user.salt());
             if (user.hashedPassword().equals(hashedPsw)) {
-                var out = resp.getWriter();
-                out.println("<html><body><h1>Logged</h1></body></html>");
+                HttpSession session = req.getSession();
+                session.setAttribute("username", usr);
+                resp.sendRedirect(req.getContextPath() + "/home.jsp");
             }
             else {
-                System.out.println("Logged in");
-                req.setAttribute("username", usr);
-                req.getRequestDispatcher("home.jsp").forward(req, resp);
+                resp.sendRedirect(req.getContextPath() + "/?error=Invalid+credentials");
             }
         }
-        catch (SQLException |  NoSuchAlgorithmException e) {
-            throw new IOException("Registration failed", e);
-        } catch (ServletException e) {
-            throw new RuntimeException(e);
+        catch (SQLException e) {
+            resp.sendRedirect(req.getContextPath() + "/?error=User+does+not+exist");
+        } catch (NoSuchAlgorithmException | NoSuchProviderException e) {
+            System.out.println("Problem with Bouncy Castle");
+            resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            resp.sendRedirect(req.getContextPath() + "/?error=Technical+error");
         }
     }
 }

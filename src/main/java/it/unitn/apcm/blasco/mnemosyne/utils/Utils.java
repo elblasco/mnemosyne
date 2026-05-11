@@ -1,4 +1,4 @@
-package it.unitn.apcm.blasco.mnemosyne.Utils;
+package it.unitn.apcm.blasco.mnemosyne.utils;
 
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.util.encoders.Hex;

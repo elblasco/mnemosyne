@@ -5,9 +5,13 @@
     <title>LogIn or SignUp</title>
 </head>
 <body>
+<% String error = request.getParameter("error");%>
+<% if (error != null) { %>
+<h1 style="color: red;"><%= error %></h1>
+<% } %>
 <h1>LogIn</h1>
 <form method="post" action="LogIn">
-    <label for="logInUsr">Usaername:</label><br>
+    <label for="logInUsr">Username:</label><br>
     <input type="text" id="logInUsr" name="logInUsr" placeholder="username" required><br>
     <label for="logInPsw">Password:</label><br>
     <input type="password" id="logInPsw" name="logInPsw" placeholder="password" required><br><br>
@@ -16,7 +20,7 @@
 <h1>SignUp</h1>
 <br/>
 <form method="post" action="SignUp">
-    <label for="signUpUsr">Usaername:</label><br>
+    <label for="signUpUsr">Username:</label><br>
     <input type="text" id="logInUsr" name="signUpUsr" placeholder="username" required><br>
     <label for="signUpPsw">Password:</label><br>
     <input type="password" id="signUpPsw" name="signUpPsw" placeholder="password" required><br><br>
