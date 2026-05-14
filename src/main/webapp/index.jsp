@@ -3,6 +3,7 @@
 <html>
 <head>
     <title>LogIn or SignUp</title>
+    <script src="./js/LogInAndSignUp.js" defer></script>
 </head>
 <body>
 <% String error = request.getParameter("error");%>
@@ -10,7 +11,8 @@
 <h1 style="color: red;"><%= error %></h1>
 <% } %>
 <h1>LogIn</h1>
-<form method="post" action="LogIn">
+<%--<form method="POST" action="LogIn" id="logIn">--%>
+<form method="POST" action="LogIn" id="logIn">
     <label for="logInUsr">Username:</label><br>
     <input type="text" id="logInUsr" name="logInUsr" placeholder="username" required><br>
     <label for="logInPsw">Password:</label><br>
@@ -19,7 +21,8 @@
 </form>
 <h1>SignUp</h1>
 <br/>
-<form method="post" action="SignUp">
+<%--<form method="POST" action="SignUp" id="signUp">--%>
+<form method="POST" action="SignUp" id="signUp">
     <label for="signUpUsr">Username:</label><br>
     <input type="text" id="logInUsr" name="signUpUsr" placeholder="username" required><br>
     <label for="signUpPsw">Password:</label><br>
