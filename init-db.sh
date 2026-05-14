@@ -20,12 +20,12 @@ INSERT INTO users (username, hashed_password, salt) VALUES
     ('admin', "$admin_hash", "$admin_salt"),
     ('user1', "$user1_hash", "$user1_salt");
 CREATE TABLE IF NOT EXISTS files (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
     owner TEXT NOT NULL,
     ciphertext BLOB NOT NULL,
-    encryptedFileName TEXT NOT NULL,
-    tag TEXT NOT NULL,
-    nonce TEXT NOT NULL,
+    fileName TEXT NOT NULL,
+    tag BLOB NOT NULL,
+    nonce BLOB NOT NULL,
+    PRIMARY KEY (owner, fileName),
     FOREIGN KEY(owner) REFERENCES users(username)
 );
 EOF
