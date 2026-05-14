@@ -8,7 +8,7 @@ import jakarta.servlet.http.HttpSession;
 
 import java.io.IOException;
 
-@WebFilter(urlPatterns = {"/UploadFile", "/home.jsp"})
+@WebFilter(urlPatterns = {"/UploadFile", "/home.jsp", "/FileList", "/InvalidateTag"})
 public class UploadFileFilter implements Filter {
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
