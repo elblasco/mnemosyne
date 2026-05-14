@@ -31,28 +31,34 @@ public class SignUp extends HttpServlet {
         String psw = req.getParameter("signUpPsw");
 
         if (usr == null || usr.isEmpty() || psw == null || psw.isEmpty()) {
-            resp.sendRedirect(req.getHeader("Referer"));
+            usr = null;
+            psw = null;
+            resp.sendRedirect(req.getContextPath() + "/?error=Empty+credentials");
             return;
         }
 
         try (Connection conn = DriverManager.getConnection(DB_URL)) {
             if(User.IsUserInDB(conn, usr)) {
-                resp.sendRedirect(req.getHeader("Referer"));
-                return;
+                resp.sendRedirect(req.getContextPath() + "/?error=User+already+exists");
+            } else {
+                String salt = String.valueOf(System.currentTimeMillis() / 1000L);
+                var user = new User(usr, hashPassword(psw, salt), salt);
+                user.insertUserInDB(conn);
+                System.out.println("User added successfully");
+                HttpSession session = req.getSession();
+                session.setAttribute("username", user.username());
+                resp.sendRedirect(req.getContextPath() + "/home.jsp");
             }
-            String salt = String.valueOf(System.currentTimeMillis() / 1000L);
-
-            var user = new User(usr, hashPassword(psw, salt), salt);
-            user.insertUserInDB(conn);
-            System.out.println("User added successfully");
-            HttpSession session = req.getSession();
-            session.setAttribute("username", user.username());
-            resp.sendRedirect(req.getContextPath() + "/home.jsp");
         }
         catch (SQLException | NoSuchAlgorithmException e) {
-            throw new IOException("Registration failed", e);
+            resp.sendRedirect(req.getContextPath() + "/?error=User+does+not+exist");
         } catch (NoSuchProviderException e) {
-            throw new RuntimeException(e);
+            System.out.println("Problem with Bouncy Castle");
+            resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            resp.sendRedirect(req.getContextPath() + "/?error=Technical+error");
+        } finally {
+            usr = null;
+            psw = null;
         }
     }
 

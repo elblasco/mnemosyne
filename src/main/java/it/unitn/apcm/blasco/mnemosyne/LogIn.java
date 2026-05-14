@@ -34,6 +34,8 @@ public class LogIn extends HttpServlet {
 
         if (usr == null || usr.isEmpty() || psw == null || psw.isEmpty()) {
             resp.sendRedirect(req.getContextPath() + "/?error=Empty+credentials");
+            usr = null;
+            psw = null;
             return;
         }
 
@@ -55,6 +57,9 @@ public class LogIn extends HttpServlet {
             System.out.println("Problem with Bouncy Castle");
             resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             resp.sendRedirect(req.getContextPath() + "/?error=Technical+error");
+        } finally {
+            usr = null;
+            psw = null;
         }
     }
 }
