@@ -3,12 +3,13 @@
 <html>
 <head>
     <title>LogIn or SignUp</title>
-    <script src="./js/LogInAndSignUp.js" defer></script>
+    <script src="js/logInAndSignUp.js" type="module" defer></script>
 </head>
 <body>
 <% String error = request.getParameter("error");%>
 <% if (error != null) { %>
-<h1 style="color: red;"><%= error %></h1>
+<h1 style="color: red;"><%= error %>
+</h1>
 <% } %>
 <h1>LogIn</h1>
 <%--<form method="POST" action="LogIn" id="logIn">--%>
@@ -24,7 +25,7 @@
 <%--<form method="POST" action="SignUp" id="signUp">--%>
 <form method="POST" action="SignUp" id="signUp">
     <label for="signUpUsr">Username:</label><br>
-    <input type="text" id="logInUsr" name="signUpUsr" placeholder="username" required><br>
+    <input type="text" id="signUpUsr" name="signUpUsr" placeholder="username" required><br>
     <label for="signUpPsw">Password:</label><br>
     <input type="password" id="signUpPsw" name="signUpPsw" placeholder="password" required><br><br>
     <input type="submit" value="SignUp">

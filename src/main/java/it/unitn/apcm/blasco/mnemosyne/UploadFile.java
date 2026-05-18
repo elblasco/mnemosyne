@@ -41,21 +41,19 @@ public class UploadFile extends HttpServlet {
                 filePart.getSubmittedFileName(),
                 filePart.getInputStream().readAllBytes()
         );
-        byte[] hashedPsw = Hex.decode(new String(req.getPart("hashedPsw").getInputStream().readAllBytes()));
-        String userName = req.getSession().getAttribute("username").toString();
-
         try (Connection conn = DriverManager.getConnection(DB_URL)) {
-            new EncryptedFile(plainFile, hashedPsw, userName).insertIntoDB(conn);
+            new EncryptedFile(
+                    plainFile,
+                    Hex.decode(req.getPart("keyEnc").getInputStream().readAllBytes()),
+                    new String(req.getPart("username").getInputStream().readAllBytes())
+            ).insertIntoDB(conn);
             System.out.println(plainFile.name() + " has been added");
-        }
-        catch (SQLException e) {
+        } catch (SQLException e) {
             System.out.println("The request comes from " + req.getContextPath());
             resp.sendRedirect(req.getContextPath() + "?error=User+does+not+exist");
         } catch (InvalidCipherTextException e) {
             resp.sendRedirect(req.getContextPath() + "?error=Server+error");
         } finally {
-            hashedPsw = null;
-            userName = null;
             plainFile = null;
         }
     }

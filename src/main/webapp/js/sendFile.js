@@ -1,3 +1,5 @@
+import {createAndFillFormData, manageErrorFromServer, writeErrorMessage} from "./utils.js";
+
 const form = document.getElementById("sendFile");
 
 form.addEventListener(
@@ -10,22 +12,32 @@ form.addEventListener(
             return;
         }
         const file = files[0];
-        const formData = new FormData();
-        formData.append("file", file);
-        formData.append("hashedPsw", sessionStorage.getItem("hashedPsw"));
         const response = await fetch("UploadFile", {
             method: "POST",
-            body: formData,
+            body: createAndFillFormData([
+                ["file", file],
+                ["keyEnc", sessionStorage.getItem("keyEnc")],
+                ["pasHash", sessionStorage.getItem("pasHash")],
+                ["username", sessionStorage.getItem("username")]
+            ]),
         });
         if (response.ok) {
             form.reset();
             await loadFiles();
+        } else {
+            await manageErrorFromServer(response);
         }
     }
 );
 
 async function loadFiles() {
-    const response = await fetch("FileList");
+    const response = await fetch("FileList", {
+        method: "POST",
+        body: createAndFillFormData([
+            ["pasHash", sessionStorage.getItem("pasHash")],
+            ["username", sessionStorage.getItem("username")]
+        ]),
+    });
     if (!response.ok) {
         document.getElementById("fileList").innerHTML =
             `<li class="error">Failed to load files</li>`;
@@ -71,12 +83,14 @@ function populateList(items) {
 }
 
 async function downloadFile(fileName) {
-    const formData = new FormData();
-    formData.append("fileName", fileName);
-    formData.append("hashedPsw", sessionStorage.getItem("hashedPsw"));
-    const response = await fetch("FileList", {
+    const response = await fetch("DownLoadFile", {
         method: "POST",
-        body: formData,
+        body: createAndFillFormData([
+            ["fileName", fileName],
+            ["keyEnc", sessionStorage.getItem("keyEnc")],
+            ["pasHash", sessionStorage.getItem("pasHash")],
+            ["username", sessionStorage.getItem("username")]
+        ]),
     });
 
     if (!response.ok) {
@@ -85,9 +99,9 @@ async function downloadFile(fileName) {
     }
 
     const blob = await response.blob();
-    const url  = URL.createObjectURL(blob);
+    const url = URL.createObjectURL(blob);
 
-    const a= document.createElement("a");
+    const a = document.createElement("a");
     a.href = url;
     a.download = fileName;
     a.style.display = "none";
@@ -101,20 +115,25 @@ async function downloadFile(fileName) {
 async function invalidateFile(fileName) {
     const response = await fetch("InvalidateTag", {
         method: "POST",
-        headers: { "Content-Type": "text/plain" },
-        body: fileName,
+        body: createAndFillFormData([
+            ["fileName", fileName],
+            ["pasHash", sessionStorage.getItem("pasHash")],
+            ["username", sessionStorage.getItem("username")]
+        ]),
     });
     if (!response.ok) {
         await manageErrorFromServer(response);
-        return;
     }
 }
 
 async function deleteFile(fileName) {
     const response = await fetch("DeleteFile", {
         method: "POST",
-        headers: { "Content-Type": "text/plain" },
-        body: fileName,
+        body: createAndFillFormData([
+            ["fileName", fileName],
+            ["pasHash", sessionStorage.getItem("pasHash")],
+            ["username", sessionStorage.getItem("username")]
+        ]),
     });
     if (!response.ok) {
         await manageErrorFromServer(response);
@@ -122,18 +141,4 @@ async function deleteFile(fileName) {
     await loadFiles();
 }
 
-async function manageErrorFromServer(response) {
-    const message = await response.text();
-    writeErrorMessage(message)
-}
-
-function writeErrorMessage(message) {
-    document.getElementById("errorHeading")?.remove();
-    const h1 = document.createElement("h1");
-    h1.id = "errorHeading";
-    h1.textContent = message;
-    h1.style.color = "red";
-    document.body.prepend(h1);
-}
-
-loadFiles();
+await loadFiles();

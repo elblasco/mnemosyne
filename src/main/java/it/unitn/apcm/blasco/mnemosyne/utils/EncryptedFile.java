@@ -26,7 +26,7 @@ public record EncryptedFile(String owner, byte[] ciphertext, String fileName, by
     }
 
     public void insertIntoDB(Connection conn) throws SQLException {
-        if(existsInDB(conn, owner, fileName)){
+        if (existsInDB(conn, owner, fileName)) {
             try (PreparedStatement stmt = conn.prepareStatement(
                     "UPDATE files SET ciphertext = ?, tag = ?, nonce = ?  WHERE owner = ? AND fileName = ?"
             )) {
@@ -37,8 +37,7 @@ public record EncryptedFile(String owner, byte[] ciphertext, String fileName, by
                 stmt.setString(5, fileName);
                 stmt.executeUpdate();
             }
-        }
-        else{
+        } else {
             try (PreparedStatement stmt = conn.prepareStatement(
                     "INSERT INTO files (owner, ciphertext, fileName, tag, nonce) VALUES (?, ?, ?, ?, ?)"
             )) {
@@ -54,7 +53,7 @@ public record EncryptedFile(String owner, byte[] ciphertext, String fileName, by
 
     public static List<String> getFileList(Connection conn, String owner) throws SQLException {
         String sql = "SELECT fileName FROM files WHERE owner = ?";
-        ArrayList result = new ArrayList();
+        ArrayList<String> result = new ArrayList<>();
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, owner);
             ResultSet rs = stmt.executeQuery();
@@ -76,8 +75,7 @@ public record EncryptedFile(String owner, byte[] ciphertext, String fileName, by
             ResultSet rs = stmt.executeQuery();
             rs.next();
             return new EncryptedFile(owner, rs.getBytes(2), fileName, rs.getBytes(4), rs.getBytes(5));
-        }
-        else {
+        } else {
             return null;
         }
     }
@@ -142,8 +140,8 @@ public record EncryptedFile(String owner, byte[] ciphertext, String fileName, by
         cipher.doFinal(output, len);
 
         int ctLen = output.length - 16;
-        byte[][] result = new byte[][] {
-                Arrays.copyOfRange(output, 0,     ctLen),
+        byte[][] result = new byte[][]{
+                Arrays.copyOfRange(output, 0, ctLen),
                 Arrays.copyOfRange(output, ctLen, output.length),
                 nonce
         };

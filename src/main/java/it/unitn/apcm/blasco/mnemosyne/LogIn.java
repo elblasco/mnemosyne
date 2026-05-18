@@ -1,19 +1,26 @@
 package it.unitn.apcm.blasco.mnemosyne;
 
-import java.io.*;
+import it.unitn.apcm.blasco.mnemosyne.utils.User;
+import jakarta.servlet.annotation.MultipartConfig;
+import jakarta.servlet.annotation.WebServlet;
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import org.bouncycastle.util.encoders.Hex;
+
+import java.io.IOException;
+import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
-import java.sql.*;
-
-import it.unitn.apcm.blasco.mnemosyne.utils.User;
-import jakarta.servlet.http.*;
-import jakarta.servlet.annotation.*;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
 
 import static it.unitn.apcm.blasco.mnemosyne.utils.User.getUserFromDB;
-import static it.unitn.apcm.blasco.mnemosyne.utils.Utils.DB_URL;
-import static it.unitn.apcm.blasco.mnemosyne.utils.Utils.hashPassword;
+import static it.unitn.apcm.blasco.mnemosyne.utils.Utils.*;
 
 @WebServlet(name = "LogIn", value = "/LogIn")
+@MultipartConfig
 public class LogIn extends HttpServlet {
 
     public void init() {
@@ -24,16 +31,13 @@ public class LogIn extends HttpServlet {
         }
     }
 
-    public void doGet(HttpServletRequest request, HttpServletResponse response) {
-        response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-    }
-
     public void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-        String usr = req.getParameter("logInUsr");
-        String psw = req.getParameter("logInPsw");
+        String usr = req.getParameter("username");
+        byte[] psw = Hex.decode(req.getParameter("pasHash"));
 
-        if (usr == null || usr.isEmpty() || psw == null || psw.isEmpty()) {
-            resp.sendRedirect(req.getContextPath() + "/?error=Empty+credentials");
+        if (usr == null || usr.isEmpty()) {
+            resp.setStatus(HttpServletResponse.SC_FORBIDDEN);
+            resp.getOutputStream().write(("Empty credentials").getBytes());
             usr = null;
             psw = null;
             return;
@@ -41,22 +45,24 @@ public class LogIn extends HttpServlet {
 
         try (Connection conn = DriverManager.getConnection(DB_URL)) {
             User user = getUserFromDB(conn, usr);
-            String hashedPsw = hashPassword(psw, user.salt());
-            if (user.hashedPassword().equals(hashedPsw)) {
-                HttpSession session = req.getSession();
-                session.setAttribute("username", usr);
+            if (MessageDigest.isEqual(
+                    user.hashedPassword(),
+                    hashPassword(psw, user.salt())
+            )) {
+                addCookie("username", usr, resp);
+                addCookie("pasHash", Hex.toHexString(psw), resp);
                 resp.sendRedirect(req.getContextPath() + "/home.jsp");
+            } else {
+                resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+                resp.getOutputStream().write(("Invalid credentials").getBytes());
             }
-            else {
-                resp.sendRedirect(req.getContextPath() + "/?error=Invalid+credentials");
-            }
-        }
-        catch (SQLException e) {
-            resp.sendRedirect(req.getContextPath() + "/?error=User+does+not+exist");
+        } catch (SQLException e) {
+            resp.setStatus(HttpServletResponse.SC_FORBIDDEN);
+            resp.getOutputStream().write(("User does not exist").getBytes());
         } catch (NoSuchAlgorithmException | NoSuchProviderException e) {
             System.out.println("Problem with Bouncy Castle");
             resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-            resp.sendRedirect(req.getContextPath() + "/?error=Technical+error");
+            resp.getOutputStream().write(("Technical error").getBytes());
         } finally {
             usr = null;
             psw = null;
