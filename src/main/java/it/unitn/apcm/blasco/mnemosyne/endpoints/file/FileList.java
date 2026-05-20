@@ -1,4 +1,4 @@
-package it.unitn.apcm.blasco.mnemosyne;
+package it.unitn.apcm.blasco.mnemosyne.endpoints.file;
 
 
 import com.google.gson.Gson;
@@ -11,30 +11,17 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 import java.io.IOException;
-import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.SQLException;
-
-import static it.unitn.apcm.blasco.mnemosyne.utils.Utils.DB_URL;
 
 @WebServlet(name = "FileList", value = "/FileList")
 @MultipartConfig
 public class FileList extends HttpServlet {
 
-    public void init() {
-        try {
-            Class.forName("org.sqlite.JDBC");
-        } catch (ClassNotFoundException e) {
-            throw new RuntimeException("Failed to load SQLite JDBC driver", e);
-        }
-    }
-
     public void doPost(HttpServletRequest req, HttpServletResponse resp) {
-        try (Connection conn = DriverManager.getConnection(DB_URL)) {
+        try {
             resp.setContentType("application/json");
             resp.setCharacterEncoding("UTF-8");
             resp.getWriter().write(new Gson().toJson(EncryptedFile.getFileList(
-                    conn,
                     new String(req.getPart("username").getInputStream().readAllBytes())))
             );
         } catch (SQLException e) {

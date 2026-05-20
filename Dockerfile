@@ -1,4 +1,5 @@
-FROM maven:3.9.9-eclipse-temurin-17 AS builder
+FROM maven:3.9.16-eclipse-temurin-25-noble AS builder
+#maven:3.9.9-eclipse-temurin-17 AS builder
 
 WORKDIR /app
 
@@ -7,8 +8,8 @@ RUN mvn -B -q -e -DskipTests dependency:go-offline
 COPY src ./src
 RUN mvn clean package -DskipTests
 
-FROM tomcat:10.1-jdk17-temurin
-
+FROM tomcat:10.1.55-jre21-temurin-noble
+#tomcat:10.1-jdk17-temurin
 RUN apt-get update && apt-get install -y sqlite3 && rm -rf /var/lib/apt/lists/*
 COPY init-db.sh /usr/local/bin/init-db.sh
 RUN chmod +x /usr/local/bin/init-db.sh

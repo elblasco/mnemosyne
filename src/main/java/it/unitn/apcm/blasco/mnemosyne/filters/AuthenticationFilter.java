@@ -17,13 +17,8 @@ import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.stream.Collectors;
-
-import static it.unitn.apcm.blasco.mnemosyne.utils.Utils.DB_URL;
 
 @WebFilter(urlPatterns = {"/home.jsp"})
 @MultipartConfig
@@ -48,10 +43,8 @@ public class AuthenticationFilter implements Filter {
     private boolean cookieValid(HttpServletRequest req, HttpServletResponse resp) throws NoSuchAlgorithmException, NoSuchProviderException {
         String usr = getSpecificCookieValue(resp, req.getCookies(), "username");
         byte[] psw = Hex.decode(getSpecificCookieValue(resp, req.getCookies(), "pasHash"));
-        try (Connection conn = DriverManager.getConnection(DB_URL)) {
-            return User.isUserLogged(conn, usr, psw);
-        } catch (SQLException e) {
-            return false;
+        try {
+            return User.areUserCredentialValid(usr, psw);
         } catch (NoSuchAlgorithmException | NoSuchProviderException e) {
             throw e;
         }
