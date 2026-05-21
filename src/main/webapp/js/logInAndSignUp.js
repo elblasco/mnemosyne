@@ -1,4 +1,4 @@
-import {hashAndSave} from "./utils.js";
+import {createAndFillFormData, hashAndSave, manageErrorFromServer, writeErrorMessage} from "./utils.js";
 
 document.getElementById("logIn").addEventListener("submit", remapAction("logInUsr", "logInPsw", "LogIn"));
 document.getElementById("signUp").addEventListener("submit", remapAction("signUpUsr", "signUpPsw", "SignUp"));
@@ -8,22 +8,33 @@ function remapAction(idUsr, idPsw, endPoint) {
         e.preventDefault();
         await digestMessage(idUsr, idPsw);
 
-        const form = document.createElement("form");
-        form.method = "POST";
-        form.action = endPoint;
-        [
+        const formData = createAndFillFormData([
             ["username", sessionStorage.getItem("username")],
-            ["pasHash", sessionStorage.getItem("pasHash")],
-        ].forEach(([name, value]) => {
-            const input = document.createElement("input");
-            input.type = "hidden";
-            input.name = name;
-            input.value = value;
-            form.appendChild(input);
-        });
+            ["pasHash", sessionStorage.getItem("pasHash")]
+        ]);
 
-        document.body.appendChild(form);
-        form.submit()
+        try {
+            const response = await fetch(endPoint, {
+                method: "POST",
+                body: formData,
+                redirect: "manual"
+            });
+
+            if (response.type === "opaqueredirect") {
+                window.location.href = "home.jsp";
+            } else if (!response.ok) {
+                await manageErrorFromServer(response);
+            } else {
+                const errorText = await response.text();
+                if (errorText) {
+                    writeErrorMessage(errorText);
+                } else {
+                    window.location.href = "home.jsp";
+                }
+            }
+        } catch (error) {
+            writeErrorMessage("Network error: " + error.message);
+        }
     }
 }
 
