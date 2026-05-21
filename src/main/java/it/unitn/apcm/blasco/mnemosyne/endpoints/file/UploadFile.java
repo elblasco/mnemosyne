@@ -37,8 +37,6 @@ public class UploadFile extends HttpServlet {
                 filePart.getSubmittedFileName(),
                 filePart.getInputStream().readAllBytes()
         )) {
-            System.out.println("The key length is " + decodeHexBytes(req.getPart("keyEnc").getInputStream().readAllBytes()).length);
-            System.out.println("The key is " + new String(req.getPart("keyEnc").getInputStream().readAllBytes()));
             try (EncryptedFile encryptedFile = new EncryptedFile(
                     plainFile,
                     decodeHexBytes(req.getPart("keyEnc").getInputStream().readAllBytes()),

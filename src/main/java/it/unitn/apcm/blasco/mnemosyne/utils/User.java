@@ -27,13 +27,12 @@ public record User(String username, byte[] hashedPassword, byte[] salt) implemen
                 stmt.setString(1, username);
                 try (ResultSet rs = stmt.executeQuery()) {
                     if (!rs.next()) {
-                        byte[] empty256bits = {
-                                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
-                        };
-                        byte[] empty64bits = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+                        byte[] empty256bits = new byte[32];
+                        byte[] empty64bits = new byte[8];
+                        for (byte b : empty256bits) {
+                            System.out.print(b);
+                        }
+                        System.out.print('\n');
                         MessageDigest.isEqual(
                                 hashPassword(
                                         empty256bits,
