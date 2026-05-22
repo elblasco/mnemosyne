@@ -40,7 +40,7 @@ public class UploadFile extends HttpServlet {
             try (EncryptedFile encryptedFile = new EncryptedFile(
                     plainFile,
                     decodeHexBytes(req.getPart("keyEnc").getInputStream().readAllBytes()),
-                    new String(req.getPart("username").getInputStream().readAllBytes())
+                    decodeHexBytes(req.getPart("username").getInputStream().readAllBytes())
             )) {
                 encryptedFile.insertIntoDB();
             }

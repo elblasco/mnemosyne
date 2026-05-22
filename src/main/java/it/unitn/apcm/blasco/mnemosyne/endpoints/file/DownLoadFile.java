@@ -38,7 +38,7 @@ public class DownLoadFile extends HttpServlet {
 
     public void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         try (EncryptedFile encryptedFile = EncryptedFile.getFromDB(
-                new String(req.getPart("username").getInputStream().readAllBytes()),
+                decodeHexBytes(req.getPart("username").getInputStream().readAllBytes()),
                 new String(req.getPart("fileName").getInputStream().readAllBytes())
         )) {
             try (PlainFile plainFile = new PlainFile(

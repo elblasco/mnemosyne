@@ -11,6 +11,8 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.sql.SQLException;
 
+import static it.unitn.apcm.blasco.mnemosyne.utils.Utils.decodeHexBytes;
+
 @WebServlet(name = "DeleteFile", value = "/DeleteFile")
 @MultipartConfig
 public class DeleteFile extends HttpServlet {
@@ -18,7 +20,7 @@ public class DeleteFile extends HttpServlet {
     public void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         try {
             EncryptedFile.deleteEncryptedFile(
-                    new String(req.getPart("username").getInputStream().readAllBytes()),
+                    decodeHexBytes(req.getPart("username").getInputStream().readAllBytes()),
                     new String(req.getPart("fileName").getInputStream().readAllBytes())
             );
             resp.setStatus(HttpServletResponse.SC_OK);
@@ -29,7 +31,7 @@ public class DeleteFile extends HttpServlet {
         } catch (SQLException e) {
             resp.setContentType("text/plain");
             resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-            resp.getOutputStream().write(("Error while deleting, try again").getBytes());
+            resp.getOutputStream().write(("Error while deleting, try again " + e).getBytes());
         }
     }
 }

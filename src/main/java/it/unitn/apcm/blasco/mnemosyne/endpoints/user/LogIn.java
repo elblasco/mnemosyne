@@ -1,5 +1,6 @@
 package it.unitn.apcm.blasco.mnemosyne.endpoints.user;
 
+import it.unitn.apcm.blasco.mnemosyne.utils.Utils;
 import jakarta.servlet.annotation.MultipartConfig;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -24,20 +25,21 @@ public class LogIn extends HttpServlet {
 
 
     public void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-        String usr = req.getParameter("username");
+        String rawUsr = req.getParameter("username");
         String rawPsw = req.getParameter("pasHash");
 
-        if (usr == null || usr.isEmpty() || rawPsw == null || rawPsw.isEmpty()) {
+        if (rawUsr == null || rawUsr.isEmpty() || rawPsw == null || rawPsw.isEmpty()) {
             resp.setStatus(HttpServletResponse.SC_FORBIDDEN);
             resp.getOutputStream().write(("Empty credentials").getBytes());
             return;
         }
 
         try {
+            byte[] usr = Utils.decodeHexBytes(rawUsr.getBytes());
             byte[] psw = Hex.decode(rawPsw);
             if (areUserCredentialValid(usr, psw)) {
-                resp.addCookie(generateCookie("username", usr));
-                resp.addCookie(generateCookie("pasHash", Hex.toHexString(psw)));
+                resp.addCookie(generateCookie("username", rawUsr));
+                resp.addCookie(generateCookie("pasHash", rawPsw));
                 resp.sendRedirect(req.getContextPath() + "/home.jsp");
             } else {
                 resp.setStatus(HttpServletResponse.SC_FORBIDDEN);
@@ -47,8 +49,6 @@ public class LogIn extends HttpServlet {
             System.out.println("Problem with Bouncy Castle");
             resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             resp.getOutputStream().write(("Technical error").getBytes());
-        } finally {
-            usr = null;
         }
     }
 }

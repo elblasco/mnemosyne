@@ -2,6 +2,7 @@ package it.unitn.apcm.blasco.mnemosyne.utils;
 
 import jakarta.servlet.http.Cookie;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
+import org.bouncycastle.util.encoders.Hex;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
@@ -119,25 +120,8 @@ public class Utils {
         return randomBytes;
     }
 
-    public static byte[] decodeHexBytes(byte[] hexBytes) throws IllegalArgumentException {
-        if (hexBytes.length % 2 != 0) {
-            throw new IllegalArgumentException("Input length must be even");
-        }
-
-        byte[] result = new byte[hexBytes.length / 2];
-
-        for (int i = 0; i < hexBytes.length; i += 2) {
-            int high = Character.digit((char) hexBytes[i], 16);
-            int low = Character.digit((char) hexBytes[i + 1], 16);
-
-            if (high < 0 || low < 0) {
-                throw new IllegalArgumentException("Invalid hex character");
-            }
-
-            result[i / 2] = (byte) ((high << 4) | low);
-        }
-
-        return result;
+    public static byte[] decodeHexBytes(byte[] hexBytes) {
+        return Hex.decode(hexBytes);
     }
 
     public static Cookie generateCookie(String name, String data) {

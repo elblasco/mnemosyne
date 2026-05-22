@@ -13,6 +13,8 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.sql.SQLException;
 
+import static it.unitn.apcm.blasco.mnemosyne.utils.Utils.decodeHexBytes;
+
 @WebServlet(name = "FileList", value = "/FileList")
 @MultipartConfig
 public class FileList extends HttpServlet {
@@ -21,8 +23,10 @@ public class FileList extends HttpServlet {
         try {
             resp.setContentType("application/json");
             resp.setCharacterEncoding("UTF-8");
-            resp.getWriter().write(new Gson().toJson(EncryptedFile.getFileList(
-                    new String(req.getPart("username").getInputStream().readAllBytes())))
+            resp.getWriter().write(new Gson().toJson(
+                    EncryptedFile.getFileList(
+                            decodeHexBytes(req.getPart("username").getInputStream().readAllBytes())
+                    ))
             );
         } catch (SQLException e) {
             throw new RuntimeException(e);

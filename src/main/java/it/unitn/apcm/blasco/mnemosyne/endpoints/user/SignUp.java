@@ -24,30 +24,37 @@ public class SignUp extends HttpServlet {
     }
 
     public void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-        String usr = req.getParameter("username");
+        String rawUsr = req.getParameter("username");
         String rawPsw = req.getParameter("pasHash");
 
-        if (usr == null || usr.isEmpty() || rawPsw == null || rawPsw.isEmpty()) {
+        if (rawUsr == null || rawUsr.isEmpty() || rawPsw == null || rawPsw.isEmpty()) {
             resp.setStatus(HttpServletResponse.SC_FORBIDDEN);
             resp.getOutputStream().write(("Empty credentials").getBytes());
             return;
         }
 
+        if (rawUsr.equals(rawPsw)) {
+            resp.setStatus(HttpServletResponse.SC_FORBIDDEN);
+            resp.getOutputStream().write(("Cannot use the same string for username and password").getBytes());
+            return;
+        }
+
         try {
             byte[] psw = Hex.decode(rawPsw);
+            byte[] usr = Hex.decode(rawUsr);
             if (User.isUsernameInDB(usr)) {
                 resp.getOutputStream().write(("User already exists").getBytes());
             } else {
                 byte[] salt = getRandomBytes(8);
                 new User(usr, hashPassword(psw, salt), salt)
                         .insertUserInDB();
-                resp.addCookie(generateCookie("username", usr));
-                resp.addCookie(generateCookie("pasHash", Hex.toHexString(psw)));
+                resp.addCookie(generateCookie("username", rawUsr));
+                resp.addCookie(generateCookie("pasHash", rawPsw));
                 resp.sendRedirect(req.getContextPath() + "/home.jsp");
             }
         } catch (SQLException e) {
             resp.setStatus(HttpServletResponse.SC_FORBIDDEN);
-            resp.getOutputStream().write(("Error while inserting the user data").getBytes());
+            resp.getOutputStream().write(("Error while inserting the user data " + e).getBytes());
         } catch (NoSuchProviderException | NoSuchAlgorithmException e) {
             System.out.println("Problem with Bouncy Castle");
             resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);

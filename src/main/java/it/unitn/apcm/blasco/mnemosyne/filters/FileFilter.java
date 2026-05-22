@@ -6,9 +6,10 @@ import jakarta.servlet.annotation.MultipartConfig;
 import jakarta.servlet.annotation.WebFilter;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.bouncycastle.util.encoders.Hex;
 
 import java.io.IOException;
+
+import static it.unitn.apcm.blasco.mnemosyne.utils.Utils.decodeHexBytes;
 
 @WebFilter(urlPatterns = {"/UploadFile", "/FileList", "/InvalidateTag", "/LogOut", "/DeleteFile", "/DownLoadFile"})
 @MultipartConfig
@@ -17,9 +18,11 @@ public class FileFilter implements Filter {
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
         var req = (HttpServletRequest) request;
         try {
-            if (User.areUserCredentialValid(
-                    new String(req.getPart("username").getInputStream().readAllBytes()),
-                    Hex.decode(new String(req.getPart("pasHash").getInputStream().readAllBytes())))
+            if (!req.getParameterNames().hasMoreElements()) {
+                ((HttpServletResponse) response).sendRedirect("/mnemosyne");
+            } else if (User.areUserCredentialValid(
+                    decodeHexBytes(req.getPart("username").getInputStream().readAllBytes()),
+                    decodeHexBytes(req.getPart("pasHash").getInputStream().readAllBytes()))
             ) {
                 chain.doFilter(request, response);
             } else {

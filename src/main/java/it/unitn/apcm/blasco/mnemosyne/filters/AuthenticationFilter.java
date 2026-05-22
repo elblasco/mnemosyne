@@ -41,10 +41,13 @@ public class AuthenticationFilter implements Filter {
     }
 
     private boolean cookieValid(HttpServletRequest req, HttpServletResponse resp) throws NoSuchAlgorithmException, NoSuchProviderException {
-        String usr = getSpecificCookieValue(resp, req.getCookies(), "username");
+        byte[] usr = Hex.decode(getSpecificCookieValue(resp, req.getCookies(), "username"));
         byte[] psw = Hex.decode(getSpecificCookieValue(resp, req.getCookies(), "pasHash"));
         try {
-            return User.areUserCredentialValid(usr, psw);
+            return User.areUserCredentialValid(
+                    usr,
+                    psw
+            );
         } catch (NoSuchAlgorithmException | NoSuchProviderException e) {
             throw e;
         }

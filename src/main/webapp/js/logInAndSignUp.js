@@ -6,6 +6,7 @@ document.getElementById("signUp").addEventListener("submit", remapAction("signUp
 function remapAction(idUsr, idPsw, endPoint) {
     return async function (e) {
         e.preventDefault();
+
         await digestMessage(idUsr, idPsw);
 
         const formData = createAndFillFormData([
@@ -41,7 +42,7 @@ function remapAction(idUsr, idPsw, endPoint) {
 async function digestMessage(idUsr, idPsw) {
     const plainPsw = document.getElementById(idPsw).value;
     const plainUSr = document.getElementById(idUsr).value;
-    sessionStorage.setItem("username", plainUSr);
+    await hashAndSave("username", plainUSr);
     await hashAndSave("keyEnc", (plainPsw + plainUSr));
     await hashAndSave("pasHash", plainPsw);
 }
